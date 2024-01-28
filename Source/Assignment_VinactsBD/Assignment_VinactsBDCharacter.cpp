@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
+#include "PathNode.h"
 #include "EnhancedInputSubsystems.h"
 
 
@@ -13,7 +14,10 @@
 
 AAssignment_VinactsBDCharacter::AAssignment_VinactsBDCharacter()
 {
-
+	t = new float(0.0);
+	dt = new float(0.0);
+	from = new FVector();
+	to = new FVector();
 }
 
 void AAssignment_VinactsBDCharacter::BeginPlay()
@@ -29,6 +33,10 @@ void AAssignment_VinactsBDCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+	to->X = 10;
+	*dt = 1.0 / (FVector::Distance(*from, *to) * 60.0);
+
+	UE_LOG(LogTemp, Warning, TEXT("MyDoubleValue: %s"), *FString::Printf(TEXT("%f"), *dt));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -57,9 +65,30 @@ void AAssignment_VinactsBDCharacter::InputReleased()
 {
 	UE_LOG(LogTemp, Warning, TEXT("InputReleased"));
 }
+
+
+void AAssignment_VinactsBDCharacter::SetEdgeToFollow(const APathNode* a, const APathNode* b)
+{
+	if (a == nullptr || b == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You passed null Path Node pointer"));
+		return;
+	}
+
+	*from = a->GetActorLocation();
+	*to = b->GetActorLocation();
+	
+	*t += *dt;
+	UE_LOG(LogTemp, Warning, TEXT("Set Node Edge\nT: %f DT: %f From: %s To: %s"), *t, *dt, *(*from).ToString(), *(*to).ToString());
+}
 void AAssignment_VinactsBDCharacter::InpuTriggered()
 {
-	UE_LOG(LogTemp, Warning, TEXT("InpuTriggered"));
+	FVector LerpedVector = FMath::Lerp(*from, *to, *t);
+	*t += *dt;
+	// Print the result to the log
+	UE_LOG(LogTemp, Warning, TEXT("T: %f DT: %f From: %s To: %s"), *t, *dt, *(*from).ToString(), *(*to).ToString());
+
+	//UE_LOG(LogTemp, Warning, TEXT("InpuTriggered"));
 }
 
 
