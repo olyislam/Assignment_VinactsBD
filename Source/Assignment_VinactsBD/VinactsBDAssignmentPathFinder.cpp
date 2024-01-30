@@ -1,43 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "Containers/Array.h"
-#include "PathFinder.h"
+#include "VinactsBDAssignmentPathFinder.h"
 
-// Sets default values
-APathFinder::APathFinder()
-{
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-}
-
-// Called when the game starts or when spawned
-void APathFinder::BeginPlay()
-{
-	Super::BeginPlay();
-
-	FTimerHandle DelayHandle;
-	GetWorldTimerManager().SetTimer(DelayHandle, this, &APathFinder::TestDelay, 1.0f, false);
-}
-
-// Called every frame
-void APathFinder::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-void APathFinder::TestDelay()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Fiding Path"));
-
-	TArray<APathNode*> path = APathFinder::FindPath(startNode, goalNode);
-	
-	for(APathNode* node : path)
-		UE_LOG(LogTemp, Warning, TEXT("Node Name: %s"), *node->GetName());
-
-}
-
-TArray<APathNode*> APathFinder::FindPath(const APathNode* startNode, const APathNode* goalNode)
+TArray<APathNode*> VinactsBDAssignmentPathFinder::FindPath(const APathNode* startNode, const APathNode* goalNode)
 {
 	TArray<APathNode*>* openSet = new TArray<APathNode*>();
 	TArray<APathNode*>* closedSet = new TArray<APathNode*>();
@@ -60,19 +24,17 @@ TArray<APathNode*> APathFinder::FindPath(const APathNode* startNode, const APath
 		openSet->Remove(current);
 		closedSet->Add(current);
 
-
 		for (APathNode* neighbor : current->neighbors)
 		{
 			if (closedSet->Contains(neighbor))
 				continue;
 
-			float tentativeGScore = *gScore->Find(current) + APathFinder::CostToMove(*current, *neighbor);
-
+			float tentativeGScore = *gScore->Find(current) + VinactsBDAssignmentPathFinder::CostToMove(*current, *neighbor);
 			if (!openSet->Contains(neighbor) || tentativeGScore < *gScore->Find(neighbor))
 			{
 				cameFrom->Add(neighbor, current);
 				gScore->Add(neighbor, tentativeGScore);
-				fScore->Add(neighbor, *gScore->Find(neighbor) + APathFinder::HeuristicCostEstimate(*neighbor, *goalNode));
+				fScore->Add(neighbor, *gScore->Find(neighbor) + VinactsBDAssignmentPathFinder::HeuristicCostEstimate(*neighbor, *goalNode));
 
 				if (!openSet->Contains(neighbor))
 					openSet->Add(neighbor);
@@ -83,7 +45,7 @@ TArray<APathNode*> APathFinder::FindPath(const APathNode* startNode, const APath
 	return TArray<APathNode*>();
 }
 
-TArray<APathNode*> APathFinder::ReconstructPath(const TMap<APathNode*, APathNode*>& cameFrom, const APathNode* current)
+TArray<APathNode*> VinactsBDAssignmentPathFinder::ReconstructPath(const TMap<APathNode*, APathNode*>& cameFrom, const APathNode* current)
 {
 	TArray<APathNode*> path = TArray<APathNode*>();
 	while (cameFrom.Contains(current))
@@ -95,7 +57,7 @@ TArray<APathNode*> APathFinder::ReconstructPath(const TMap<APathNode*, APathNode
 	return path;
 }
 
-APathNode* APathFinder::GetNodeWithLowestFScore(const TArray<APathNode*>& openSet, const TMap<APathNode*, float>& fScore)
+APathNode* VinactsBDAssignmentPathFinder::GetNodeWithLowestFScore(const TArray<APathNode*>& openSet, const TMap<APathNode*, float>& fScore)
 {
 	if (openSet.Num() == 0)
 		return nullptr;
@@ -109,13 +71,13 @@ APathNode* APathFinder::GetNodeWithLowestFScore(const TArray<APathNode*>& openSe
 }
 
 
-float APathFinder::HeuristicCostEstimate(const APathNode& from, const APathNode& to)
+float VinactsBDAssignmentPathFinder::HeuristicCostEstimate(const APathNode& from, const APathNode& to)
 {
 	return FVector::Distance(from.GetActorLocation(), to.GetActorLocation());
 }
 
-float APathFinder::CostToMove(const APathNode& from, const APathNode& to)
+float VinactsBDAssignmentPathFinder::CostToMove(const APathNode& from, const APathNode& to)
 {
-	return APathFinder::HeuristicCostEstimate(from, to);
+	return VinactsBDAssignmentPathFinder::HeuristicCostEstimate(from, to);
 }
 
