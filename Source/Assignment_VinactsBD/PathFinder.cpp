@@ -15,17 +15,27 @@ APathFinder::APathFinder()
 void APathFinder::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	FTimerHandle DelayHandle;
+	GetWorldTimerManager().SetTimer(DelayHandle, this, &APathFinder::TestDelay, 1.0f, false);
 }
 
 // Called every frame
 void APathFinder::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
+void APathFinder::TestDelay()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Fiding Path"));
 
+	TArray<APathNode*> path = APathFinder::FindPath(startNode, goalNode);
+	
+	for(APathNode* node : path)
+		UE_LOG(LogTemp, Warning, TEXT("Node Name: %s"), *node->GetName());
+
+}
 
 TArray<APathNode*> APathFinder::FindPath(const APathNode* startNode, const APathNode* goalNode)
 {

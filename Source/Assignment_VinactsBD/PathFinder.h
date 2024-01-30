@@ -28,11 +28,18 @@ public:
 
 private:
 
+	UPROPERTY(EditAnywhere, Category = "VinactsBD Assignment")
+		APathNode* startNode;
+	UPROPERTY(EditAnywhere, Category = "VinactsBD Assignment")
+		APathNode* goalNode;
+
 	static TArray<APathNode*> FindPath(const APathNode* startNode, const APathNode* goalNode);
 	static TArray<APathNode*> ReconstructPath(const TMap<APathNode*, APathNode*>& cameFrom, const APathNode* current);
 	 
 	static APathNode* GetNodeWithLowestFScore(const TArray<APathNode*>& openSet, const TMap<APathNode*, float>& fScore);
  	static float HeuristicCostEstimate(const APathNode& from, const APathNode& to);
 	static float CostToMove(const APathNode& from, const APathNode& to);
+
+	void TestDelay();
 
 };
