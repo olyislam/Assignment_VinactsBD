@@ -1,5 +1,5 @@
-#include "Containers/Array.h"
 #include "VinactsBDAssignmentPathFinder.h"
+#include "Containers/Array.h"
 
 TArray<APathNode*> VinactsBDAssignmentPathFinder::FindPath(const APathNode* startNode, const APathNode* goalNode)
 {

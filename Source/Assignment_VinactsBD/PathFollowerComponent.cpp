@@ -24,7 +24,7 @@ UPathFollowerComponent::UPathFollowerComponent()
 void UPathFollowerComponent::BeginPlay()
 {
 	Super::BeginPlay();	
-    lastReachedNode = UPathFollowerComponent::GetClosestNode(*GetOwner());
+//    lastReachedNode = UPathFollowerComponent::GetClosestNode(*GetOwner());
 
 
 
@@ -55,6 +55,9 @@ void UPathFollowerComponent::BeginPlay()
 // Called every frame
 void UPathFollowerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+    if (!shouldMove)
+        return;
+
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
    
     t = FMath::Clamp(t + dt, 0, 1);
@@ -69,7 +72,16 @@ void UPathFollowerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 void UPathFollowerComponent::UpdatePathLineSegment()
 {
     if (selectedIndex >= path.Num() - 1)
+    {
+        if (lastReachedNode != nullptr)
+        {
+            lastReachedNode = path.Last();
+            onOnReachedEndNode.Broadcast(lastReachedNode);
+            UE_LOG(LogTemp, Warning, TEXT("You Reached The End Node At Location: %s"), *lastReachedNode->GetActorLocation().ToString());
+            lastReachedNode = nullptr;
+        }
         return;
+    }
 
     if (selectedIndex >= 0)
     {
@@ -83,32 +95,41 @@ void UPathFollowerComponent::UpdatePathLineSegment()
     }
 
     to_Location = path[++selectedIndex]->GetActorLocation();
-    UE_LOG(LogTemp, Warning, TEXT("Selected Index IS %d"), selectedIndex);
+    UE_LOG(LogTemp, Warning, TEXT("New Path Node Index: %d"), selectedIndex);
     
     t = 0;
     dt = (1.0 / FVector::Distance(from_Location, to_Location)) * speed;
 
-    if(lastReachedNode != nullptr)
+    if (lastReachedNode != nullptr)
+    {
+        onReachedPathNode.Broadcast(lastReachedNode);
         UE_LOG(LogTemp, Warning, TEXT("You Reached the Node: %s At Location: %s"), *lastReachedNode->GetName(), *lastReachedNode->GetActorLocation().ToString());
+    }
 }
-
 
 
 bool UPathFollowerComponent::SetDestination(APathNode* destination)
 {
-    if(lastReachedNode == nullptr)
-        lastReachedNode = GetClosestNode(*GetOwner()); 
-    if (lastReachedNode == nullptr || destination == nullptr)
+    APathNode* closestNode = GetClosestNode(*GetOwner());
+    if (closestNode == nullptr || destination == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid Input to Calculate Path!!!"));
         return false;
+    }
     
 
-	path = VinactsBDAssignmentPathFinder::FindPath(lastReachedNode, destination);
+	path = VinactsBDAssignmentPathFinder::FindPath(closestNode, destination);
+    if (path.Num() < 1)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid Path!!!"));
+        return false;
+    }
 
-    selectedIndex = -1;
+    float offsetFromFirstNode = FVector::Distance(GetOwner()->GetActorLocation(), path.Top()->GetActorLocation());
+    UE_LOG(LogTemp, Warning, TEXT("\n\nPath Node Count: %d\nOffset Between Object To Path Start Node %d\n"), path.Num(), offsetFromFirstNode);
+
+    selectedIndex = offsetFromFirstNode > 0 ? -1 : 0;
     UpdatePathLineSegment();
-
-    UE_LOG(LogTemp, Warning, TEXT("Path Follower component path node count %d"), path.Num());
-
     return true;
 }
 
@@ -116,9 +137,10 @@ APathNode* UPathFollowerComponent::GetClosestNode(AActor& from)
 {
     APathNode* result = nullptr;
     float ClosestDistanceSquared = MAX_FLT;
+    APathNode* node = nullptr;
     for (TActorIterator<APathNode> availableNodes(GetWorld()); availableNodes; ++availableNodes)
     {
-        APathNode* node = *availableNodes;
+         node = *availableNodes;
         if (node)
         {
             float DistanceSquared = FVector::DistSquared(node->GetActorLocation(), GetOwner()->GetActorLocation());
