@@ -27,13 +27,22 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "VinactsBD Assignment")
-	void SetDestination(APathNode* destination);
+	bool SetDestination(APathNode* destination);
 private:
 	APathNode* GetClosestNode(AActor& from);
+	void UpdatePathLineSegment();
+
 
 protected:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "VinactsBD Assignment")
+		float speed = 1;
 	APathNode* lastReachedNode;
 
 private:
+	float t = 0;
+	float dt = 0;
+	float selectedIndex = 1;
+	FVector from_Location;
+	FVector to_Location;
 	TArray<APathNode*> path;
 };

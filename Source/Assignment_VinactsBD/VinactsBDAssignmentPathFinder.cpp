@@ -3,6 +3,9 @@
 
 TArray<APathNode*> VinactsBDAssignmentPathFinder::FindPath(const APathNode* startNode, const APathNode* goalNode)
 {
+	if(startNode == nullptr || goalNode == nullptr)
+		return TArray<APathNode*>();
+
 	TArray<APathNode*>* openSet = new TArray<APathNode*>();
 	TArray<APathNode*>* closedSet = new TArray<APathNode*>();
 

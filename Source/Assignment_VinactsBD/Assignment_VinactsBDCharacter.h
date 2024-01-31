@@ -24,9 +24,6 @@ class AAssignment_VinactsBDCharacter : public ACharacter
 public:
 	AAssignment_VinactsBDCharacter();
 
-	UFUNCTION(BlueprintCallable, Category = "VinactsBD Assignment")
-		virtual void SetEdgeToFollow(const APathNode* a, const APathNode* b);
-
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -35,14 +32,8 @@ protected:
 	virtual void BeginPlay();
 
 private:
-	float* t;
-	float* dt;
-	FVector* from;
-	FVector* to;
-
 	virtual void InputBegin();
 	virtual void InputReleased();
 	virtual void InpuTriggered();
-
 };
 
