@@ -2,14 +2,14 @@
 
 #pragma once
 
+#include "GameFramework/Pawn.h"
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "PathNode.h"
 #include "Assignment_VinactsBDCharacter.generated.h"
 
 UCLASS(config=Game)
-class AAssignment_VinactsBDCharacter : public ACharacter
+class AAssignment_VinactsBDCharacter : public APawn
 {
 	GENERATED_BODY()
 	
