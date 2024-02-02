@@ -1,9 +1,16 @@
 #include "VinactsBDAssignmentPathFinder.h"
 #include "Containers/Array.h"
 
+
+/// <summary>
+/// Return a new path between tow node
+/// </summary>
+/// <param name="startNode"></param>
+/// <param name="goalNode"></param>
+/// <returns></returns>
 TArray<APathNode*> VinactsBDAssignmentPathFinder::FindPath(const APathNode* startNode, const APathNode* goalNode)
 {
-	if(startNode == nullptr || goalNode == nullptr)
+	if(startNode == nullptr || goalNode == nullptr || startNode == goalNode)
 		return TArray<APathNode*>();
 
 	TArray<APathNode*>* openSet = new TArray<APathNode*>();
@@ -48,6 +55,13 @@ TArray<APathNode*> VinactsBDAssignmentPathFinder::FindPath(const APathNode* star
 	return TArray<APathNode*>();
 }
 
+
+/// <summary>
+/// Constructing the path by backtracking.
+/// </summary>
+/// <param name="cameFrom">collection of path node as a chain from start to current path node</param>
+/// <param name="current">Current path node</param>
+/// <returns></returns>
 TArray<APathNode*> VinactsBDAssignmentPathFinder::ReconstructPath(const TMap<APathNode*, APathNode*>& cameFrom, const APathNode* current)
 {
 	TArray<APathNode*> path = TArray<APathNode*>();
@@ -60,6 +74,12 @@ TArray<APathNode*> VinactsBDAssignmentPathFinder::ReconstructPath(const TMap<APa
 	return path;
 }
 
+/// <summary>
+/// Returning a Path node pointer which path node has lowest heuristic cost
+/// </summary>
+/// <param name="openSet"></param>
+/// <param name="fScore"></param>
+/// <returns></returns>
 APathNode* VinactsBDAssignmentPathFinder::GetNodeWithLowestFScore(const TArray<APathNode*>& openSet, const TMap<APathNode*, float>& fScore)
 {
 	if (openSet.Num() == 0)
@@ -74,11 +94,23 @@ APathNode* VinactsBDAssignmentPathFinder::GetNodeWithLowestFScore(const TArray<A
 }
 
 
+/// <summary>
+/// Calculate the heoristic cost value between two path node
+/// </summary>
+/// <param name="from">From path node</param>
+/// <param name="to">To path node</param>
+/// <returns></returns>
 float VinactsBDAssignmentPathFinder::HeuristicCostEstimate(const APathNode& from, const APathNode& to)
 {
 	return FVector::Distance(from.GetActorLocation(), to.GetActorLocation());
 }
 
+/// <summary>
+/// Calculate the movement cost value between two path node
+/// </summary>
+/// <param name="from">From path node</param>
+/// <param name="to">To path node</param>
+/// <returns></returns>
 float VinactsBDAssignmentPathFinder::CostToMove(const APathNode& from, const APathNode& to)
 {
 	return VinactsBDAssignmentPathFinder::HeuristicCostEstimate(from, to);

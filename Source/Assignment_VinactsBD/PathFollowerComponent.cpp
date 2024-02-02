@@ -12,11 +12,7 @@
 // Sets default values for this component's properties
 UPathFollowerComponent::UPathFollowerComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 
@@ -24,31 +20,7 @@ UPathFollowerComponent::UPathFollowerComponent()
 void UPathFollowerComponent::BeginPlay()
 {
 	Super::BeginPlay();	
-//    lastReachedNode = UPathFollowerComponent::GetClosestNode(*GetOwner());
-
-
-
-    to_Location = from_Location = GetOwner()->GetActorLocation();
-
-    /*********************************************** Garbage will be remove this section ***************************************************/
-    //float dst = -1;
-    //APathNode* testGoalNode = nullptr;
-    //for (TActorIterator<APathNode> availableNodes(GetWorld()); availableNodes; ++availableNodes)
-    //{
-    //    APathNode* node = *availableNodes;
-    //    if (node)
-    //    {
-    //        float DistanceSquared = FVector::DistSquared(node->GetActorLocation(), GetOwner()->GetActorLocation());
-    //        if (DistanceSquared > dst)
-    //        {
-    //            dst = DistanceSquared;
-    //            testGoalNode = node;
-    //        }
-    //    }
-    //}
-    //SetDestination(testGoalNode);
-    /*********************************************** Garbage will be remove this section ***************************************************/
-
+    to_Location = from_Location = GetOwner()->GetActorLocation();//set both point player start point
 }
 
 
@@ -68,7 +40,9 @@ void UPathFollowerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
         UpdatePathLineSegment();
 }
 
-
+/// <summary>
+/// Generate a new line segment to move the character along the from_Location to to_Location point
+/// </summary>
 void UPathFollowerComponent::UpdatePathLineSegment()
 {
     if (selectedIndex >= path.Num() - 1)
@@ -77,7 +51,8 @@ void UPathFollowerComponent::UpdatePathLineSegment()
         {
             lastReachedNode = path.Last();
             onOnReachedEndNode.Broadcast(lastReachedNode);
-            UE_LOG(LogTemp, Warning, TEXT("You Reached The End Node At Location: %s"), *lastReachedNode->GetActorLocation().ToString());
+            if(lastReachedNode!= nullptr)
+                UE_LOG(LogTemp, Warning, TEXT("You Reached The End Node At Location: %s"), *lastReachedNode->GetActorLocation().ToString());
             lastReachedNode = nullptr;
         }
         return;
@@ -108,54 +83,57 @@ void UPathFollowerComponent::UpdatePathLineSegment()
 }
 
 
-
+/// <summary>
+/// Set a random destination path node to generate a new path
+/// Note: It will try to ignore closest path node that point the player currently palced on.
+/// </summary>
+/// <param name="ignoreableNode">Which path node should not be selected in random situation</param>
+/// <returns></returns>
 bool UPathFollowerComponent::SetRandomDestination(APathNode* ignoreableNode)
 {
     if (ignoreableNode != nullptr)
         if (APathNode::nodes->Contains(ignoreableNode))
             APathNode::nodes->Remove(ignoreableNode);
-        APathNode* closestNode = GetClosestPathNode();
-        if(closestNode != nullptr)
+    APathNode* closestNode = GetClosestPathNode();
+    if (closestNode != nullptr)
+        if (APathNode::nodes->Contains(closestNode))
             APathNode::nodes->Remove(closestNode);
 
-        APathNode* goalNode = nullptr;
-        if (APathNode::nodes->Num() > 0)
-            goalNode = (*APathNode::nodes)[FMath::FRandRange(0, APathNode::nodes->Num() - 1)];
-        
-        if (ignoreableNode != nullptr)
+    APathNode* goalNode = nullptr;
+    if (APathNode::nodes->Num() > 0)
+        goalNode = (*APathNode::nodes)[FMath::FRandRange(0, APathNode::nodes->Num() - 1)];
+
+    if (ignoreableNode != nullptr)
+        if (!APathNode::nodes->Contains(ignoreableNode))
             APathNode::nodes->Add(ignoreableNode);
-        if (closestNode != nullptr)
+    if (closestNode != nullptr)
+        if (!APathNode::nodes->Contains(closestNode))
             APathNode::nodes->Add(closestNode);
 
-        if (goalNode != nullptr)
-        {
-            SetDestination(goalNode);
-            return true;
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Not Enough Path Node Available in the World Map to Generate A New Path!!!"));
-            return false;
-        }
-    
-        
+    if (goalNode != nullptr)
+    {
+        SetDestination(goalNode);
+        return true;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("Not Enough Path Node Available in the World Map to Generate A New Path!!!"));
+    return false; 
 }
 
+
+/// <summary>
+/// Set a destination Path Node to generate a new path
+/// </summary>
+/// <param name="destination"></param>
+/// <returns></returns>
 bool UPathFollowerComponent::SetDestination(APathNode* destination)
 {
     APathNode* startNode = GetClosestPathNode();
     if (startNode == nullptr || destination == nullptr)
     {
         UE_LOG(LogTemp, Warning, TEXT("Invalid Input to Calculate Path!!!"));
- 
-        if (startNode == nullptr)
-            UE_LOG(LogTemp, Warning, TEXT("Invalid Input to Calculate Path!!! 1"));
-        if (destination == nullptr)
-            UE_LOG(LogTemp, Warning, TEXT("Invalid Input to Calculate Path!!! 2"));
-
         return false;
     }
-    
 
 	path = VinactsBDAssignmentPathFinder::FindPath(startNode, destination);
     if (path.Num() < 1)
@@ -165,13 +143,18 @@ bool UPathFollowerComponent::SetDestination(APathNode* destination)
     }
 
     float offsetFromFirstNode = FVector::Distance(GetOwner()->GetActorLocation(), path.Top()->GetActorLocation());
-    UE_LOG(LogTemp, Warning, TEXT("\n\nPath Node Count: %d\nOffset Between Object To Path Start Node %d\n"), path.Num(), offsetFromFirstNode);
+    UE_LOG(LogTemp, Warning, TEXT("Path Node Count: %d\nOffset Between Object To Path Start Node %d\n"), path.Num(), offsetFromFirstNode);
 
     selectedIndex = offsetFromFirstNode > 0 ? -1 : 0;
     UpdatePathLineSegment();
     return true;
 }
 
+
+/// <summary>
+/// Return a Closest Path node pointer relative to Player Character
+/// </summary>
+/// <returns></returns>
 APathNode* UPathFollowerComponent::GetClosestPathNode()
 {
     APathNode* result = nullptr;

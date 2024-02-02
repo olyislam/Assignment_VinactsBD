@@ -34,6 +34,5 @@ protected:
 private:
 	virtual void InputBegin();
 	virtual void InputReleased();
-	virtual void InpuTriggered();
 };
 
