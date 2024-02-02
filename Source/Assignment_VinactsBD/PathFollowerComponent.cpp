@@ -28,25 +28,25 @@ void UPathFollowerComponent::BeginPlay()
 
 
 
-
+    to_Location = from_Location = GetOwner()->GetActorLocation();
 
     /*********************************************** Garbage will be remove this section ***************************************************/
-    float dst = -1;
-    APathNode* testGoalNode = nullptr;
-    for (TActorIterator<APathNode> availableNodes(GetWorld()); availableNodes; ++availableNodes)
-    {
-        APathNode* node = *availableNodes;
-        if (node)
-        {
-            float DistanceSquared = FVector::DistSquared(node->GetActorLocation(), GetOwner()->GetActorLocation());
-            if (DistanceSquared > dst)
-            {
-                dst = DistanceSquared;
-                testGoalNode = node;
-            }
-        }
-    }
-    SetDestination(testGoalNode);
+    //float dst = -1;
+    //APathNode* testGoalNode = nullptr;
+    //for (TActorIterator<APathNode> availableNodes(GetWorld()); availableNodes; ++availableNodes)
+    //{
+    //    APathNode* node = *availableNodes;
+    //    if (node)
+    //    {
+    //        float DistanceSquared = FVector::DistSquared(node->GetActorLocation(), GetOwner()->GetActorLocation());
+    //        if (DistanceSquared > dst)
+    //        {
+    //            dst = DistanceSquared;
+    //            testGoalNode = node;
+    //        }
+    //    }
+    //}
+    //SetDestination(testGoalNode);
     /*********************************************** Garbage will be remove this section ***************************************************/
 
 }
@@ -55,10 +55,10 @@ void UPathFollowerComponent::BeginPlay()
 // Called every frame
 void UPathFollowerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
     if (!shouldMove)
         return;
-
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
    
     t = FMath::Clamp(t + dt, 0, 1);
     FVector newPoint = FMath::Lerp(from_Location, to_Location, t);
@@ -108,17 +108,56 @@ void UPathFollowerComponent::UpdatePathLineSegment()
 }
 
 
+
+bool UPathFollowerComponent::SetRandomDestination(APathNode* ignoreableNode)
+{
+    if (ignoreableNode != nullptr)
+        if (APathNode::nodes->Contains(ignoreableNode))
+            APathNode::nodes->Remove(ignoreableNode);
+        APathNode* closestNode = GetClosestPathNode();
+        if(closestNode != nullptr)
+            APathNode::nodes->Remove(closestNode);
+
+        APathNode* goalNode = nullptr;
+        if (APathNode::nodes->Num() > 0)
+            goalNode = (*APathNode::nodes)[FMath::FRandRange(0, APathNode::nodes->Num() - 1)];
+        
+        if (ignoreableNode != nullptr)
+            APathNode::nodes->Add(ignoreableNode);
+        if (closestNode != nullptr)
+            APathNode::nodes->Add(closestNode);
+
+        if (goalNode != nullptr)
+        {
+            SetDestination(goalNode);
+            return true;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Not Enough Path Node Available in the World Map to Generate A New Path!!!"));
+            return false;
+        }
+    
+        
+}
+
 bool UPathFollowerComponent::SetDestination(APathNode* destination)
 {
-    APathNode* closestNode = GetClosestNode(*GetOwner());
-    if (closestNode == nullptr || destination == nullptr)
+    APathNode* startNode = GetClosestPathNode();
+    if (startNode == nullptr || destination == nullptr)
     {
         UE_LOG(LogTemp, Warning, TEXT("Invalid Input to Calculate Path!!!"));
+ 
+        if (startNode == nullptr)
+            UE_LOG(LogTemp, Warning, TEXT("Invalid Input to Calculate Path!!! 1"));
+        if (destination == nullptr)
+            UE_LOG(LogTemp, Warning, TEXT("Invalid Input to Calculate Path!!! 2"));
+
         return false;
     }
     
 
-	path = VinactsBDAssignmentPathFinder::FindPath(closestNode, destination);
+	path = VinactsBDAssignmentPathFinder::FindPath(startNode, destination);
     if (path.Num() < 1)
     {
         UE_LOG(LogTemp, Warning, TEXT("Invalid Path!!!"));
@@ -133,27 +172,27 @@ bool UPathFollowerComponent::SetDestination(APathNode* destination)
     return true;
 }
 
-APathNode* UPathFollowerComponent::GetClosestNode(AActor& from)
+APathNode* UPathFollowerComponent::GetClosestPathNode()
 {
     APathNode* result = nullptr;
-    float ClosestDistanceSquared = MAX_FLT;
-    APathNode* node = nullptr;
-    for (TActorIterator<APathNode> availableNodes(GetWorld()); availableNodes; ++availableNodes)
+    float distSqrt = MAX_FLT;
+    const FVector relativePoint = GetOwner()->GetActorLocation();
+
+    for (APathNode* node : *APathNode::nodes)
     {
-         node = *availableNodes;
         if (node)
         {
-            float DistanceSquared = FVector::DistSquared(node->GetActorLocation(), GetOwner()->GetActorLocation());
-            if (DistanceSquared < ClosestDistanceSquared)
+            float dist = FVector::DistSquared(node->GetActorLocation(), relativePoint);
+            if (dist < distSqrt)
             {
-                ClosestDistanceSquared = DistanceSquared;
+                distSqrt = dist;
                 result = node;
             }
         }
     }
 
     if (result == nullptr)
-        UE_LOG(LogTemp, Warning, TEXT("No any relative path node found to create a complete path.\nPlease construct the path node properly in the map"));
+        UE_LOG(LogTemp, Warning, TEXT("No any Closest path Node Found"));
 
     return result;
 }

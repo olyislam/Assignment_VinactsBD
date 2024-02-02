@@ -28,7 +28,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "VinactsBD Assignment")
-	bool SetDestination(APathNode* destination);
+		bool SetDestination(APathNode* destination);
+	UFUNCTION(BlueprintCallable, Category = "VinactsBD Assignment")
+		bool SetRandomDestination(APathNode* ignoreableNode);
 	
 	UPROPERTY(BlueprintAssignable, Category = "VinactsBD Assignment")
 		FPathNodeEvent onReachedPathNode;
@@ -36,7 +38,7 @@ public:
 		FPathNodeEvent onOnReachedEndNode;
 
 private:
-	APathNode* GetClosestNode(AActor& from);
+	APathNode* GetClosestPathNode();
 	void UpdatePathLineSegment();
 
 
@@ -44,7 +46,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "VinactsBD Assignment")
 		float speed = 1;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "VinactsBD Assignment")
-		bool shouldMove = true;
+		bool shouldMove = false;
 
 
 private:

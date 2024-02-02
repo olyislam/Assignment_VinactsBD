@@ -21,6 +21,16 @@ void APathNode::BeginPlay()
 	if (!nodes->Contains(this))
 	{
 		nodes->Add(this);
-		UE_LOG(LogTemp, Warning, TEXT("Total Path Node Count: %d"), nodes->Num());
+		UE_LOG(LogTemp, Warning, TEXT("New Path Node Added\nTotal Path Node Count: %d"), nodes->Num());
+	}
+}
+
+void APathNode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if (nodes->Contains(this))
+	{
+		nodes->Remove(this);
+		UE_LOG(LogTemp, Warning, TEXT("A Path Node Removed\nTotal Path Node Count: %d"), nodes->Num());
 	}
 }
