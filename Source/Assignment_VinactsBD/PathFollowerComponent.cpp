@@ -136,6 +136,7 @@ bool UPathFollowerComponent::SetDestination(APathNode* destination)
     }
 
 	path = VinactsBDAssignmentPathFinder::FindPath(startNode, destination);
+    OnGenerateNewPath.Broadcast(path);
     if (path.Num() < 1)
     {
         UE_LOG(LogTemp, Warning, TEXT("Invalid Path!!!"));

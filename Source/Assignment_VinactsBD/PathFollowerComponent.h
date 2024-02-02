@@ -9,6 +9,7 @@
 #include "PathFollowerComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPathNodeEvent, class APathNode*, PathNode);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPathListEvent, const TArray<APathNode*>&, PathList);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ASSIGNMENT_VINACTSBD_API UPathFollowerComponent : public UActorComponent
@@ -36,6 +37,8 @@ public:
 		FPathNodeEvent onReachedPathNode;
 	UPROPERTY(BlueprintAssignable, Category = "VinactsBD Assignment")
 		FPathNodeEvent onOnReachedEndNode;
+	UPROPERTY(BlueprintAssignable, Category = "VinactsBD Assignment")
+		FPathListEvent OnGenerateNewPath;
 
 private:
 	APathNode* GetClosestPathNode();
